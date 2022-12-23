@@ -29,7 +29,6 @@ Set<string> allEmphasesOfhelper(Set<string> emphaseTence, Vector<string> remainW
 
 }
 
-
 Set<string> allEmphasesOf(const string& sentence) {
     /* TODO: Delete this line and the next one, then implement this function. */
     Vector<string> splitWord = tokenize(sentence);
