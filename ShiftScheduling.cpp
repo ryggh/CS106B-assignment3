@@ -4,11 +4,52 @@ using namespace std;
 /* TODO: Refer to ShiftScheduling.h for more information about what this function should do.
  * Then, delete this comment and replace it with one of your own.
  */
+int highestValueScheduleForhelper(Set<Shift>& shifts, Set<Shift>& valueList, int maxHours, int value){
+    if (maxHours < 0){
+        error("you got an error");
+    }
+    else if (shifts.isEmpty()){
+        return value;
+    }
+    else {
+        Shift shift = shifts.first();
+        shifts.remove(shift);
+        int flag = 0;
+        for (Shift eachshift: valueList){
+            if (overlapsWith(eachshift, shift)){
+                flag = 1;
+                break;
+            }
+        }
+        if (flag){
+            Set<Shift> withoutList = valueList;
+            int without = highestValueScheduleForhelper(shifts, valueList, maxHours, value);
+            return without;
+        } else {
+            Set<Shift> withoutList = valueList;
+            int without = highestValueScheduleForhelper(shifts, valueList, maxHours, value);
+            Set<Shift> withList =valueList;
+            withList.add(shift);
+            int with = highestValueScheduleForhelper(shifts,
+                                                      valueList,
+                                                      maxHours - lengthOf(shift),
+                                                      value+valueOf(shift));
+            shifts.add(shift);
+            int newBest = max(with, without);
+            if (newBest == with) {
+                valueList = withList;
+            } else {
+                valueList = withoutList;
+            }
+            return newBest;
+        }
+    }
+}
 Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
-    /* TODO: Delete the next few lines and implement this function. */
-    (void) shifts;
-    (void) maxHours;
-    return {};
+    Set<Shift> highesValueList;
+    Set<Shift> shiftscopy = shifts;
+    int maxVlaue = highestValueScheduleForhelper(shiftscopy, highesValueList, maxHours, 0);
+    return highesValueList;
 }
 
 
