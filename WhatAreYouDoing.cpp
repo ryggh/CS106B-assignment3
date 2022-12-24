@@ -9,24 +9,30 @@ using namespace std;
  * Don't forget about the tokenize function defined in WhatAreYouDoing.h; you'll almost
  * certainly want to use it.
  */
-Set<string> allEmphasesOfhelper(Set<string> emphaseTence, Vector<string> remainWord, int index) {
+Set<string> allEmphasesOfhelper(string& emphaseTence, Vector<string> remainWord, int index) {
     //base case
     if (index == remainWord.size()){
-        return	emphaseTence;
+        return	{emphaseTence};
     }
-    //choose
-    string word = remainWord[index];
-    //not Upper
-    if (!isalpha(remainWord[index][0])){
-        emphaseTence.add(word);
+    else if (!isalpha(remainWord[index][0])){
+        int lenth = emphaseTence.size();
+        emphaseTence += remainWord[index];
+        Set<string> noWord = allEmphasesOfhelper(emphaseTence, remainWord, index + 1);
+        emphaseTence.erase(lenth);
+        return noWord;
     }
-    emphaseTence.add(word);
-    Set<string> noUpper = allEmphasesOfhelper(emphaseTence, remainWord, index+1);
-    //Upper
-    emphaseTence.add(toUpperCase(word));
-    Set<string> Upper = allEmphasesOfhelper(emphaseTence, remainWord, index+1);
-    return noUpper + Upper;
-
+    else {
+        //not Upper
+        int lenth = emphaseTence.size();
+        emphaseTence += remainWord[index];
+        Set<string> noUpper = allEmphasesOfhelper(emphaseTence, remainWord, index + 1);
+        emphaseTence.erase(lenth);
+        //Upper
+        emphaseTence += toUpperCase(remainWord[index]);
+        Set<string> Upper = allEmphasesOfhelper(emphaseTence, remainWord, index + 1);
+        emphaseTence.erase(lenth);
+        return noUpper + Upper;
+    }
 }
 
 Set<string> allEmphasesOf(const string& sentence) {
@@ -37,7 +43,8 @@ Set<string> allEmphasesOf(const string& sentence) {
             splitWord[i] = toLowerCase(splitWord[i]);
         }
     }
-    return allEmphasesOfhelper({}, splitWord, 0);
+    string e = "";
+    return allEmphasesOfhelper(e, splitWord, 0);
 }
 
 /* * * * * * Test Cases * * * * * */
@@ -46,18 +53,9 @@ Set<string> allEmphasesOf(const string& sentence) {
 /* TODO: Add your own tests here. You know the drill - look for edge cases, think about
  * very small and very large cases, etc.
  */
-
-
-
-
-
-
-
-
-
-
-
-
+STUDENT_TEST("input a empty string"){
+    EXPECT_EQUAL(allEmphasesOf(""), {""});
+}
 
 
 /* * * * * * Test cases from the starter files below this point. * * * * * */
