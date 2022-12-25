@@ -13,39 +13,42 @@ Set<Shift> highestValueScheduleForhelper(Set<Shift>& shifts, Set<Shift>& valueLi
         return valueList;
     }
     else {
+        //fetch first element and remove it, travel all element
         Shift shift = shifts.first();
         shifts.remove(shift);
         int flag = 0;
+        //store initial value
         int forevalue = value;
+        //choose
         //not included
         Set<Shift> without = highestValueScheduleForhelper(shifts, valueList, maxHours, value);
         int withoutValue = value;
-        //included(condition)
-        for (Shift eachshift: valueList) {
-            if (overlapsWith(eachshift, shift)) {
-                flag = 1;
+        //included (prerequisite)
+        value = forevalue;
+        value += valueOf(shift);
+        valueList.add(shift);
+        //check later element whether it overlap with the element in current valueList
+        //it will not be recursed if later element overlaps with current element
+        Set<Shift> copy = shifts;
+        for (Shift shift2: copy) {
+            for (Shift eachshift: valueList) {
+                if (overlapsWith(eachshift, shift2)) {
+                    flag = 1;
+                shifts.remove(shift2);
                 break;
+                }
             }
         }
-        //prerequisite
-        Set<Shift> with;
-        int withValue;
-        //excute
-        if (flag) {
-            value = forevalue;
-            with = highestValueScheduleForhelper(shifts, valueList, maxHours, value);
-            withValue = value;
-        } else {
-            value = forevalue;
-            value += valueOf(shift);
-            valueList.add(shift);
-            with = highestValueScheduleForhelper(shifts, valueList, maxHours-lengthOf(shift), value);
-            withValue = value;
-            valueList.remove(shift);
+        //excute included
+        Set<Shift> with = highestValueScheduleForhelper(shifts, valueList, maxHours-lengthOf(shift), value);
+        int withValue = value;
+        //unchoose (undo the operate to reference)
+        valueList.remove(shift);
+        if (flag){
+            shifts = copy;
         }
-        //unchoose
         shifts.add(shift);
-        //return Set
+        //return value and Set
         int newBest = max(withValue, withoutValue);
         value = newBest;
         if (newBest == withValue) {
@@ -74,7 +77,49 @@ Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
  * very small and very large cases, etc.
  */
 
+Set<Shift> asSet(const Vector<Shift>& shifts) {
+    Set<Shift> result;
+    for (Shift s: shifts) {
+        result += s;
+    }
+    return result;
+}
 
+STUDENT_TEST("Don't use all maxHours.") {
+    Vector<Shift> shifts = {
+        { Day::MONDAY,    10, 17, 21 }, //  7-hour shift, value is 21 ($3 / hour)
+        { Day::TUESDAY,   10, 16, 12 }, //  6-hour shift, value is 12 ($2 / hour)
+        { Day::WEDNESDAY, 10, 16, 12 }, //  6-hour shift, value is 12 ($2 / hour)
+    };
+
+    auto schedule = highestValueScheduleFor(asSet(shifts), 11);
+
+    EXPECT_EQUAL(schedule, { shifts[0] });
+}
+
+STUDENT_TEST("Short shifts worth a lot.") {
+    Vector<Shift> shifts = {
+        { Day::MONDAY,    10, 17, 21 }, //  7-hour shift, value is 21 ($3 / hour)
+        { Day::TUESDAY,   10, 16, 50 }, //  6-hour shift, value is 50 ($2 / hour)
+        { Day::TUESDAY,   9, 17, 12 }, //  8-hour shift, value is 12 ($2 / hour)
+    };
+
+    auto schedule = highestValueScheduleFor(asSet(shifts), 10);
+
+    EXPECT_EQUAL(schedule, { shifts[1] });
+}
+
+STUDENT_TEST("同样产值且有重叠的排班.") {
+    Vector<Shift> shifts = {
+        { Day::MONDAY,    10, 17, 21 }, //  7-hour shift, value is 21 ($3 / hour)
+        { Day::TUESDAY,   10, 16, 12 }, //  6-hour shift, value is 12 ($2 / hour)
+        { Day::TUESDAY,   9, 17, 12 }, //  8-hour shift, value is 12 ($2 / hour)
+    };
+
+    auto schedule = highestValueScheduleFor(asSet(shifts), 20);
+
+    EXPECT_EQUAL(schedule, { shifts[0], shifts[2] });
+}
 
 
 
@@ -95,13 +140,6 @@ Set<Shift> highestValueScheduleFor(const Set<Shift>& shifts, int maxHours) {
  * a Vector of shifts rather than a Set. This makes it a bit easier to test things.
  * You shouldn't need this function outside of these test cases.
  */
-Set<Shift> asSet(const Vector<Shift>& shifts) {
-    Set<Shift> result;
-    for (Shift s: shifts) {
-        result += s;
-    }
-    return result;
-}
 
 PROVIDED_TEST("Pick only shift if you have time for it.") {
     Set<Shift> shifts = {
